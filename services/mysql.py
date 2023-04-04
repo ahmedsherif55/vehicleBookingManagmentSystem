@@ -33,10 +33,11 @@ class Database:
         self._auto_reconnect = auto_reconnect
         self._validate_configurations()
         try:
-            self._db = mysql.connect(host=self._db_host, user=self._db_user, password=self._db_password,
-                                     database=self._db_name, port=self._db_port)
-            self._dbc = self._db.cursor(cursor=mysql_cursors.DictCursor)
-            self._db.ping(reconnect=self._auto_reconnect)
+            if not self._db or not self._db.open:
+                self._db = mysql.connect(host=self._db_host, user=self._db_user, password=self._db_password,
+                                         database=self._db_name, port=self._db_port)
+                self._dbc = self._db.cursor(cursor=mysql_cursors.DictCursor)
+                self._db.ping(reconnect=self._auto_reconnect)
         except Exception as e:
             raise DBError(f"Exception while trying to connect to the database: {e}")
 

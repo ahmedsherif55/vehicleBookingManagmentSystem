@@ -23,11 +23,5 @@ api.prefix = '/api'
 
 api.add_resource(CustomerResource, '/customers', '/customers/<int:customer_id>')
 
-
-@app.route('/')
-def index():
-    return 'Welcome to Flask !'
-
-
 if __name__ == '__main__':
     app.run()
