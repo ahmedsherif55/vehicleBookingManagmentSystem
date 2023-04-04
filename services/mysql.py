@@ -1,6 +1,5 @@
 import pymysql as mysql
 import pymysql.cursors as mysql_cursors
-import datetime
 
 
 class DBError(Exception):
@@ -69,30 +68,16 @@ class Database:
         query_values = ''
         for key in fields:
             i += 1
-            key = self._db.escape(key)
-            if isinstance(fields[key], str):
-                fields[key] = self._db.escape(fields[key])
-                query_keys += f"{key}"
-                query_values += f"'{fields[key]}'"
-            elif isinstance(fields[key], int) or isinstance(fields[key], float) or isinstance(fields[key], bool):
-                query_keys += f"{key}"
-                query_values += f"{fields[key]}"
-            elif fields[key] is None:
-                query_keys += f"{key}"
-                query_values += f"NULL"
-            elif isinstance(fields[key], datetime.datetime):
-                query_keys += f"{key}"
-                query_values += f"'{fields[key].strftime('%Y%m%d%H%M%S')}'"
-            else:
-                raise DBTypeError(
-                    "Fields value must be of type 'int', 'float', 'bool', 'str', 'datetime.datetime' or 'None'.")
+            fields[key] = self._db.escape(fields[key])
+            query_keys += f"{key}"
+            query_values += f"{fields[key]}"
             if i != length:
                 query_keys += ","
                 query_values += ","
         try:
             query += query_keys + ") VALUES (" + query_values + ")"
             self._dbc.execute(query)
-            return True
+            return self._dbc.lastrowid
         except Exception as e:
             print(e)
             return False
@@ -103,24 +88,14 @@ class Database:
         query = f"UPDATE {table} SET "
         i = 0
         for key in fields:
-            i += 1
-            key = self._db.escape(key)
-            if isinstance(fields[key], str):
-                fields[key] = self._db.escape(fields[key])
+            if fields[key] is not None:
+                i += 1
                 query += f"{key} = '{fields[key]}'"
-            elif isinstance(fields[key], int) or isinstance(fields[key], float) or isinstance(fields[key], bool):
-                query += f"{key} = {fields[key]}"
-            elif isinstance(fields[key], datetime.datetime):
-                query += f"{fields[key].strftime('%Y%m%d%H%M%S')}"
-            elif fields[key] is None:
-                query += f"{key} = NULL"
-            else:
-                raise DBTypeError(
-                    "Fields value must be of type 'int', 'float', 'bool', 'str',"
-                    "'datetime.datetime' or 'None'.")
-            if i != length:
-                query += ","
+                if i != length:
+                    query += ","
+        query = query.rstrip(',')
         query += f" WHERE {table_key} = {table_key_value}"
+        print(query)
         try:
             self._dbc.execute(query)
             if self._auto_commit:
