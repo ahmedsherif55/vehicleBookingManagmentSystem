@@ -2,7 +2,6 @@ from flask import Flask, jsonify
 from flask_restful import Api
 from werkzeug.exceptions import HTTPException
 from werkzeug.exceptions import default_exceptions
-from services.mysql import Database
 from resources.customer import CustomerResource
 
 app = Flask(__name__)
@@ -27,7 +26,6 @@ api.add_resource(CustomerResource, '/customers', '/customers/<int:customer_id>')
 
 @app.route('/')
 def index():
-    print(db.get_one(table='brands', table_key='id', table_key_value=1))
     return 'Welcome to Flask !'
 
 
