@@ -1,3 +1,5 @@
+from typing import Optional, Dict, Any
+
 from flask_restful import Resource, fields, marshal, reqparse
 from http import HTTPStatus
 
@@ -19,7 +21,7 @@ parser.add_argument('address', type=str, help='name parameter is required')
 
 
 class CustomerResource(Resource):
-    def get(self, customer_id=None):
+    def get(self, customer_id: Optional[int, None] = None) -> Dict[str, Any]:
         """Gets customer data for a specific id.
 
         Args:
@@ -27,7 +29,7 @@ class CustomerResource(Resource):
                 The customer identifier.
 
         Returns:
-            (dict):
+            (Dict):
                 A dictionary with message, http status and customer data.
 
         """
@@ -35,11 +37,11 @@ class CustomerResource(Resource):
         return {"message": "Retrieved successfully.", "status": HTTPStatus.OK,
                 "data": marshal(customer, customer_fields)}
 
-    def post(self):
+    def post(self) -> Dict[str, Any]:
         """Adds a customer record inside the database.
 
         Returns:
-            (dict):
+            (Dict):
                 A dictionary with message, http status and customer data.
 
         """
@@ -49,7 +51,7 @@ class CustomerResource(Resource):
         return {"message": "Inserted successfully.", "status": HTTPStatus.OK,
                 "data": marshal(customer, customer_fields)}
 
-    def put(self, customer_id=None):
+    def put(self, customer_id: Optional[int, None] = None) -> Dict[str, Any]:
         """Updates a customer record inside the database.
 
         Args:
@@ -57,7 +59,7 @@ class CustomerResource(Resource):
                 The customer identifier.
 
         Returns:
-            (dict):
+            (Dict):
                 A dictionary with message, http status and customer data.
 
         """
@@ -67,7 +69,7 @@ class CustomerResource(Resource):
         return {"message": "Updated successfully.", "status": HTTPStatus.OK,
                 "data": marshal(customer, customer_fields)}
 
-    def delete(self, customer_id=None):
+    def delete(self, customer_id: Optional[int, None] = None) -> Dict[str, Any]:
         """Deletes a customer record from the database.
 
         Args:
@@ -75,7 +77,7 @@ class CustomerResource(Resource):
                 The customer identifier.
 
         Returns:
-            (dict):
+            (Dict):
                 A dictionary with message and http status.
 
         """

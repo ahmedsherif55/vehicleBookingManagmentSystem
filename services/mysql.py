@@ -1,3 +1,5 @@
+from typing import Dict, Any, Union, Optional
+
 import pymysql as mysql
 import pymysql.cursors as mysql_cursors
 
@@ -42,7 +44,7 @@ class Database:
         except Exception as e:
             raise DBError(f"Exception while trying to connect to the database: {e}")
 
-    def _validate_configurations(self):
+    def _validate_configurations(self) -> None:
         """Validates if the provided database configurations is correct.
 
         Raises:
@@ -65,18 +67,18 @@ class Database:
         if not isinstance(self._auto_reconnect, bool):
             raise DBTypeError("Auto reconnect param must be of type 'bool'.")
 
-    def close(self):
+    def close(self) -> None:
         """Closes the database connection. """
         if self._db is not None:
             self._db.close()
 
-    def insert(self, table, fields):
+    def insert(self, table: str, fields: Dict[str, Any]) -> int:
         """Inserts a record into the given table.
 
         Args:
             table (str):
                 The table name.
-            fields (dict):
+            fields (Dict):
                 The data to be inserted.
 
         Returns:
@@ -108,7 +110,7 @@ class Database:
         except Exception as e:
             return False
 
-    def update(self, table, table_key, table_key_value, fields):
+    def update(self, table: str, table_key: str, table_key_value: str, fields: Dict[str, Any]) -> int:
         """Updates a record from the given table.
 
         Args:
@@ -118,7 +120,7 @@ class Database:
                 The table primary identifier.
             table_key_value (str):
                 The table primary identifier value.
-            fields (dict):
+            fields (Dict):
                 The data to be updated.
 
         Returns:
@@ -150,7 +152,7 @@ class Database:
         except Exception:
             return -1
 
-    def delete(self, table, table_key, table_key_value):
+    def delete(self, table: str, table_key: str, table_key_value: str) -> int:
         """Deletes a record from the given table.
 
         Args:
@@ -180,7 +182,7 @@ class Database:
         except Exception:
             return -1
 
-    def get_one(self, table, table_key, table_key_value):
+    def get_one(self, table: str, table_key: str, table_key_value: str) -> Optional[dict[str, Any]]:
         """Gets a record from the given table.
 
         Args:
@@ -192,7 +194,7 @@ class Database:
                 The table primary identifier value.
 
         Returns:
-            (Optional[Dict[str, Any], None]):
+            (Optional[Dict[str, Any]]):
                 The row from the database table.
 
         Raises:
