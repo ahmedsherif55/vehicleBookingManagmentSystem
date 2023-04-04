@@ -1,6 +1,10 @@
+import os
 from flask_restful import Resource, fields, marshal, reqparse
 from services.mysql import Database
 from http import HTTPStatus
+from dotenv import load_dotenv
+
+load_dotenv()
 
 customer_fields = {
     'id': fields.Integer,
@@ -16,7 +20,12 @@ parser.add_argument('phone', type=str, help='phone parameter is required')
 parser.add_argument('email', type=str, help='email parameter is required')
 parser.add_argument('address', type=str, help='name parameter is required')
 
-db = Database(db_host="127.0.0.1", db_user='root', db_password='root', db_name='crocosoft')
+DATABASE_HOST = os.getenv('DATABASE_HOST')
+DATABASE_USER = os.getenv('DATABASE_USER')
+DATABASE_PASSWORD = os.getenv('DATABASE_PASSWORD')
+DATABASE_NAME = os.getenv('DATABASE_NAME')
+
+db = Database(db_host=DATABASE_HOST, db_user=DATABASE_USER, db_password=DATABASE_PASSWORD, db_name=DATABASE_NAME)
 
 
 class CustomerResource(Resource):
