@@ -1,4 +1,5 @@
 import pymysql as mysql
+import pymysql.cursors as mysql_cursors
 import datetime
 
 
@@ -13,65 +14,64 @@ class DBTypeError(TypeError):
 
 
 class Database:
-    db_host = None
-    db_user = None
-    db_password = None
-    db_name = None
-    db_port = None
-    db = None
-    dbc = None
-    auto_commit = True
-    auto_reconnect = True
+    _db_host = None
+    _db_user = None
+    _db_password = None
+    _db_name = None
+    _db_port = None
+    _db = None
+    _dbc = None
+    _auto_commit = True
+    _auto_reconnect = True
 
     def __init__(self, db_host, db_user, db_password, db_name, db_port=3306, auto_commit=True, auto_reconnect=True):
-        self.db_host = db_host
-        self.db_user = db_user
-        self.db_password = db_password
-        self.db_name = db_name
-        self.db_port = db_port
-        self.auto_commit = auto_commit
-        self.auto_reconnect = auto_reconnect
-        self.validate_configurations()
+        self._db_host = db_host
+        self._db_user = db_user
+        self._db_password = db_password
+        self._db_name = db_name
+        self._db_port = db_port
+        self._auto_commit = auto_commit
+        self._auto_reconnect = auto_reconnect
+        self._validate_configurations()
         try:
-            self.db = mysql.connect(host=self.db_user, user=db_user,
-                                    password=db_password, database=db_name, port=db_port)
-            self.dbc = self.db.cursor()
-            self.db.ping(reconnect=self.auto_reconnect)
+            self._db = mysql.connect(host=self._db_host, user=self._db_user, password=self._db_password,
+                                     database=self._db_name, port=self._db_port)
+            self._dbc = self._db.cursor(cursor=mysql_cursors.DictCursor)
+            self._db.ping(reconnect=self._auto_reconnect)
         except Exception as e:
             raise DBError(f"Exception while trying to connect to the database: {e}")
 
-    def validate_configurations(self):
-        if not isinstance(self.db_host, str):
+    def _validate_configurations(self):
+        if not isinstance(self._db_host, str):
             raise DBTypeError("Host for database must be of type 'str'.")
-        if not isinstance(self.db_user, str):
+        if not isinstance(self._db_user, str):
             raise DBTypeError("User for database must be of type 'str'.")
-        if not isinstance(self.db_password, str):
+        if not isinstance(self._db_password, str):
             raise DBTypeError("Password for database must be of type 'str'.")
-        if not isinstance(self.db_name, str):
+        if not isinstance(self._db_name, str):
             raise DBTypeError("Name for database must be of type 'str'.")
-        if not isinstance(self.db_port, int) or self.db_port < 0 or self.db_port > 65535:
+        if not isinstance(self._db_port, int) or self._db_port < 0 or self._db_port > 65535:
             raise DBTypeError("Port for database must be of type string and set as (0<= int <= 65535).")
-        if not isinstance(self.auto_commit, bool):
+        if not isinstance(self._auto_commit, bool):
             raise DBTypeError("Auto commit param must be of type 'bool'.")
-        if not isinstance(self.auto_reconnect, bool):
+        if not isinstance(self._auto_reconnect, bool):
             raise DBTypeError("Auto reconnect param must be of type 'bool'.")
 
     def close(self):
-        if self.db is not None:
-            self.db.close()
+        if self._db is not None:
+            self._db.close()
 
     def insert(self, table, fields):
         length = len(fields)
-        table = self.db.escape(table)
         query = f"INSERT INTO {table} ("
         i = 0
         query_keys = ''
         query_values = ''
         for key in fields:
             i += 1
-            key = self.db.escape(key)
+            key = self._db.escape(key)
             if isinstance(fields[key], str):
-                fields[key] = self.db.escape(fields[key])
+                fields[key] = self._db.escape(fields[key])
                 query_keys += f"{key}"
                 query_values += f"'{fields[key]}'"
             elif isinstance(fields[key], int) or isinstance(fields[key], float) or isinstance(fields[key], bool):
@@ -91,7 +91,7 @@ class Database:
                 query_values += ","
         try:
             query += query_keys + ") VALUES (" + query_values + ")"
-            self.dbc.execute(query)
+            self._dbc.execute(query)
             return True
         except Exception as e:
             print(e)
@@ -99,14 +99,14 @@ class Database:
 
     def update(self, table, table_key, table_key_value, fields):
         length = len(fields)
-        table = self.db.escape(table)
+        table_key_value = self._db.escape(table_key_value)
         query = f"UPDATE {table} SET "
         i = 0
         for key in fields:
             i += 1
-            key = self.db.escape(key)
+            key = self._db.escape(key)
             if isinstance(fields[key], str):
-                fields[key] = self.db.escape(fields[key])
+                fields[key] = self._db.escape(fields[key])
                 query += f"{key} = '{fields[key]}'"
             elif isinstance(fields[key], int) or isinstance(fields[key], float) or isinstance(fields[key], bool):
                 query += f"{key} = {fields[key]}"
@@ -122,34 +122,32 @@ class Database:
                 query += ","
         query += f" WHERE {table_key} = {table_key_value}"
         try:
-            self.dbc.execute(query)
-            if self.auto_commit:
-                self.db.commit()
-            return self.dbc.rowcount
+            self._dbc.execute(query)
+            if self._auto_commit:
+                self._db.commit()
+            return self._dbc.rowcount
         except Exception:
             return -1
 
     def delete(self, table, table_key, table_key_value):
-        table = self.db.escape(table)
-        table_key = self.db.escape(table_key)
+        table_key_value = self._db.escape(table_key_value)
         query = f"DELETE FROM {table} WHERE {table_key} = {table_key_value}"
         try:
-            self.dbc.execute(query)
-            if self.auto_commit:
-                self.db.commit()
-            return self.dbc.rowcount
+            self._dbc.execute(query)
+            if self._auto_commit:
+                self._db.commit()
+            return self._dbc.rowcount
         except Exception:
             return -1
 
     def get_one(self, table, table_key, table_key_value):
-        table = self.db.escape(table)
-        table_key = self.db.escape(table_key)
+        table_key_value = self._db.escape(table_key_value)
         query = f"SELECT * FROM {table} WHERE {table_key} = {table_key_value}"
         try:
-            self.dbc.execute(query)
-            if self.auto_commit:
-                self.db.commit()
-            record = self.dbc.fetchone()
-            return list(record)
+            self._dbc.execute(query)
+            if self._auto_commit:
+                self._db.commit()
+            record = self._dbc.fetchone()
+            return record
         except Exception:
             return None
